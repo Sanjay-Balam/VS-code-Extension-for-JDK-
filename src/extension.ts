@@ -7,7 +7,7 @@ import * as os from 'os';
 import { exec } from 'child_process';
 
 export function activate(context: vscode.ExtensionContext) {
-    let disposable = vscode.commands.registerCommand('jdk-installer.downloadJDK', async () => {
+    let disposable = vscode.commands.registerCommand('venkysio-jdk-installer.downloadJDK', async () => {
         vscode.window.showInformationMessage('Starting JDK download...');
 
         try {

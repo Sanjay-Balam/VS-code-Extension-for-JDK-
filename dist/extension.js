@@ -33,6 +33,7 @@ const fs = __importStar(require("fs"));
 const path = __importStar(require("path"));
 const adm_zip_1 = __importDefault(require("adm-zip"));
 const os = __importStar(require("os"));
+const child_process_1 = require("child_process");
 function activate(context) {
     let disposable = vscode.commands.registerCommand('venkysio-jdk-installer.downloadJDK', async () => {
         vscode.window.showInformationMessage('Starting JDK download...');
@@ -46,6 +47,9 @@ function activate(context) {
             console.log(`Extract Path: ${extractPath}`);
             await downloadFile(downloadUrl, zipPath);
             extractZip(zipPath, extractPath);
+            // Add JDK bin path to environment variables
+            const binPath = path.join(extractPath, 'bin');
+            addToPath(binPath);
             vscode.window.showInformationMessage(`JDK ${version} downloaded and extracted to ${extractPath}`);
         }
         catch (error) {
@@ -81,6 +85,25 @@ function extractZip(zipPath, extractPath) {
     catch (error) {
         console.error(`Error in extractZip function: ${getErrorMessage(error)}`);
         throw new Error(`Failed to extract ZIP file: ${getErrorMessage(error)}`);
+    }
+}
+function addToPath(binPath) {
+    try {
+        console.log(`Adding ${binPath} to PATH`);
+        // Use setx command to set user environment variable
+        (0, child_process_1.exec)(`setx PATH "%PATH%;${binPath}"`, (error, stdout, stderr) => {
+            if (error) {
+                console.error(`Error adding to PATH: ${error.message}`);
+                vscode.window.showErrorMessage(`Failed to add JDK bin to PATH: ${error.message}`);
+                return;
+            }
+            console.log(`Added ${binPath} to PATH successfully`);
+            vscode.window.showInformationMessage(`Added JDK bin to PATH successfully`);
+        });
+    }
+    catch (error) {
+        console.error(`Error in addToPath function: ${getErrorMessage(error)}`);
+        throw new Error(`Failed to add JDK bin to PATH: ${getErrorMessage(error)}`);
     }
 }
 function getErrorMessage(error) {
