@@ -23,11 +23,10 @@ export function activate(context: vscode.ExtensionContext) {
             await downloadFile(downloadUrl, zipPath);
             extractZip(zipPath, extractPath);
 
-            // Add JDK bin path to environment variables
-            const binPath = path.join(extractPath, 'bin');
-            addToPath(binPath);
+            const binPath = path.join(extractPath, 'jdk-22', 'bin');
+            addToEnvironmentPath(binPath);
 
-            vscode.window.showInformationMessage(`JDK ${version} downloaded and extracted to ${extractPath}`);
+            vscode.window.showInformationMessage(`JDK ${version} downloaded, extracted to ${extractPath}, and added to environment variables.`);
         } catch (error) {
             console.error(`Error during JDK download and extraction: ${getErrorMessage(error)}`);
             vscode.window.showErrorMessage(`Failed to download JDK: ${getErrorMessage(error)}`);
@@ -69,23 +68,21 @@ function extractZip(zipPath: string, extractPath: string): void {
     }
 }
 
-function addToPath(binPath: string): void {
+function addToEnvironmentPath(binPath: string): void {
     try {
-        console.log(`Adding ${binPath} to PATH`);
+        console.log(`Adding ${binPath} to environment variables`);
 
-        // Use setx command to set user environment variable
-        exec(`setx PATH "%PATH%;${binPath}"`, (error, stdout, stderr) => {
+        const setxCommand = `setx PATH "%PATH%;${binPath}"`;
+        exec(setxCommand, (error, stdout, stderr) => {
             if (error) {
-                console.error(`Error adding to PATH: ${error.message}`);
-                vscode.window.showErrorMessage(`Failed to add JDK bin to PATH: ${error.message}`);
-                return;
+                console.error(`Error in addToEnvironmentPath function: ${getErrorMessage(error)}`);
+                throw new Error(`Failed to add to environment variables: ${getErrorMessage(error)}`);
             }
-            console.log(`Added ${binPath} to PATH successfully`);
-            vscode.window.showInformationMessage(`Added JDK bin to PATH successfully`);
+            console.log(`Environment variable updated: ${stdout}`);
         });
     } catch (error) {
-        console.error(`Error in addToPath function: ${getErrorMessage(error)}`);
-        throw new Error(`Failed to add JDK bin to PATH: ${getErrorMessage(error)}`);
+        console.error(`Error in addToEnvironmentPath function: ${getErrorMessage(error)}`);
+        throw new Error(`Failed to add bin path to environment variables: ${getErrorMessage(error)}`);
     }
 }
 
